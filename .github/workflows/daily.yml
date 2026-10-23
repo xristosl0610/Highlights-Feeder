@@ -1,0 +1,70 @@
+name: Daily highlights
+
+on:
+  schedule:
+    # GitHub cron is UTC and ignores DST; the app only sends once per local day after SEND_TIME.
+    - cron: "30 5 * * *" # 07:30 Europe/Amsterdam in summer (CEST)
+    - cron: "30 6 * * *" # 07:30 Europe/Amsterdam in winter (CET)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Send now, ignoring send time and already-sent checks
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - run: uv sync --frozen --no-dev
+
+      - name: Send digest
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          HIGHLIGHTS_DATABASE_ID: ${{ secrets.HIGHLIGHTS_DATABASE_ID }}
+          LIBRARY_DATABASE_ID: ${{ secrets.LIBRARY_DATABASE_ID }}
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          # Optional non-secret overrides (Settings > Secrets and variables > Actions > Variables)
+          DIGEST_SIZE: ${{ vars.DIGEST_SIZE }}
+          FAVORITE_WEIGHT: ${{ vars.FAVORITE_WEIGHT }}
+          COOLDOWN_DAYS: ${{ vars.COOLDOWN_DAYS }}
+          MAX_PER_BOOK: ${{ vars.MAX_PER_BOOK }}
+          TIMEZONE: ${{ vars.TIMEZONE }}
+          SEND_TIME: ${{ vars.SEND_TIME }}
+          PROP_HIGHLIGHT_NAME: ${{ vars.PROP_HIGHLIGHT_NAME }}
+          PROP_HIGHLIGHT_KEYWORDS: ${{ vars.PROP_HIGHLIGHT_KEYWORDS }}
+          PROP_HIGHLIGHT_FAVORITE: ${{ vars.PROP_HIGHLIGHT_FAVORITE }}
+          PROP_HIGHLIGHT_PAGE: ${{ vars.PROP_HIGHLIGHT_PAGE }}
+          PROP_HIGHLIGHT_SOURCE: ${{ vars.PROP_HIGHLIGHT_SOURCE }}
+          PROP_BOOK_NAME: ${{ vars.PROP_BOOK_NAME }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: |
+          if [ -z "$STATE_KEY" ]; then echo "STATE_KEY secret is required"; exit 1; fi
+          uv run --frozen --no-dev feeder send $FORCE
+
+      # The daily commit also keeps the schedule alive (GitHub pauses crons after 60 idle days).
+      - name: Commit review history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/state.enc
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: update review history [skip ci]"
+          git push

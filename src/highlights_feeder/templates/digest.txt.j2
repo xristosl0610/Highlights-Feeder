@@ -1,0 +1,18 @@
+Your daily highlights - {{ day.strftime('%A %d %B %Y') }}
+
+{% for h in highlights %}
+{{ loop.index }}. {{ h.name }}{% if h.favorite %} *{% endif %}
+
+   {{ h.book_name or 'Unknown source' }}{% if h.page %}, p. {{ h.page }}{% endif %}
+
+{% for block in h.body %}
+   {{ block.text }}
+{% endfor %}
+{% if h.keywords %}
+   [{{ h.keywords | join(', ') }}]
+{% endif %}
+{% if h.url %}
+   {{ h.url }}
+{% endif %}
+
+{% endfor %}

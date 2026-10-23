@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets and local data (only the encrypted data/state.enc is committed)
+.env
+data/*
+!data/state.enc
+digest_preview.html
+.pytest_cache/
+.ruff_cache/
+plan_instructions.md
+
+# Stray folder created by a tool with an unexpanded env var
+%LOCALAPPDATA%/
