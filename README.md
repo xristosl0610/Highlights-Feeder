@@ -25,11 +25,11 @@ Notion (Highlights + Library) --API--> SQLite cache --pick--> HTML email (Gmail 
 
 | Property   | Type         | Env override              | Use                       |
 |------------|--------------|---------------------------|---------------------------|
-| `name`     | Title        | `PROP_HIGHLIGHT_NAME`     | Condensed highlight       |
-| `keywords` | Multi-select | `PROP_HIGHLIGHT_KEYWORDS` | Tags shown in the email   |
-| `favorite` | Checkbox     | `PROP_HIGHLIGHT_FAVORITE` | Boosts selection weight   |
-| `page`     | Number       | `PROP_HIGHLIGHT_PAGE`     | Page in the book          |
-| `source`   | Relation     | `PROP_HIGHLIGHT_SOURCE`   | Book in Library           |
+| `Name`     | Title        | `PROP_HIGHLIGHT_NAME`     | Condensed highlight       |
+| `Keywords` | Multi-select | `PROP_HIGHLIGHT_KEYWORDS` | Tags shown in the email   |
+| `Favorite` | Checkbox     | `PROP_HIGHLIGHT_FAVORITE` | Boosts selection weight   |
+| `Page`     | Number       | `PROP_HIGHLIGHT_PAGE`     | Page in the book          |
+| `Source`   | Relation     | `PROP_HIGHLIGHT_SOURCE`   | Book in Library           |
 | page body  | blocks       | -                         | Full highlight + comments |
 
 **Library** (`LIBRARY_DATABASE_ID`): `Name` (Title, `PROP_BOOK_NAME`).
@@ -45,8 +45,9 @@ Property names are case-sensitive. Run `uv run feeder check` to validate them.
 2. Copy the **Internal Integration Secret** -> `NOTION_TOKEN`.
 3. Open the **Highlights** database as a full page -> `...` menu -> **Connections** ->
    add your integration. Repeat for **Library** (needed to resolve book names).
-4. Database IDs: copy each database link; the ID is the 32-char hex part before `?v=`
-   (`notion.so/<workspace>/<DATABASE_ID>?v=...`).
+4. Database IDs: easiest is to run `uv run feeder check` after sharing; if an ID is wrong it
+   lists the databases the integration can see. Note: the ID in the URL is the 32-char part
+   *before* `?v=` (the part after `?v=` is a view ID and won't work).
 
 ### 2. Gmail App Password (free)
 

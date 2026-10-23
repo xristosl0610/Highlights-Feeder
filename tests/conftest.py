@@ -43,11 +43,11 @@ def highlight_page(
         "created_time": "2026-01-01T00:00:00.000Z",
         "last_edited_time": edited,
         "properties": {
-            "name": {"type": "title", "title": rich(name)},
-            "keywords": {"type": "multi_select", "multi_select": [{"name": k} for k in keywords]},
-            "favorite": {"type": "checkbox", "checkbox": favorite},
-            "page": {"type": "number", "number": page},
-            "source": {"type": "relation", "relation": [{"id": book}] if book else []},
+            "Name": {"type": "title", "title": rich(name)},
+            "Keywords": {"type": "multi_select", "multi_select": [{"name": k} for k in keywords]},
+            "Favorite": {"type": "checkbox", "checkbox": favorite},
+            "Page": {"type": "number", "number": page},
+            "Source": {"type": "relation", "relation": [{"id": book}] if book else []},
         },
     }
 
@@ -62,11 +62,11 @@ def book_page(pid: str, name: str) -> dict:
 
 class FakeNotion:
     HL_SCHEMA = {
-        "name": {"type": "title"},
-        "keywords": {"type": "multi_select"},
-        "favorite": {"type": "checkbox"},
-        "page": {"type": "number"},
-        "source": {"type": "relation"},
+        "Name": {"type": "title"},
+        "Keywords": {"type": "multi_select"},
+        "Favorite": {"type": "checkbox"},
+        "Page": {"type": "number"},
+        "Source": {"type": "relation"},
     }
     LIB_SCHEMA = {"Name": {"type": "title"}}
 

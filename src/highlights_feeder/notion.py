@@ -56,6 +56,10 @@ class NotionClient:
             raise NotionError(f"Database {database_id} has no data sources")
         return self._request("GET", f"/data_sources/{sources[0]['id']}")
 
+    def search_data_sources(self) -> list[dict[str, Any]]:
+        body = {"filter": {"property": "object", "value": "data_source"}, "page_size": 100}
+        return self._request("POST", "/search", json=body)["results"]
+
     def query_data_source(self, data_source_id: str) -> Iterator[dict[str, Any]]:
         body: dict[str, Any] = {"page_size": 100}
         while True:

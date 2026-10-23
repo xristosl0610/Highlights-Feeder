@@ -59,6 +59,12 @@ def check() -> None:
                 typer.secho(f"  OK, all configured {label} properties found", fg="green")
     except NotionError as exc:
         typer.secho(str(exc), fg="red")
+        with _client(s) as client:
+            typer.echo("Databases shared with the integration (use the database ID):")
+            for ds in client.search_data_sources():
+                title = "".join(t.get("plain_text", "") for t in ds.get("title", []))
+                db_id = ds.get("parent", {}).get("database_id", "?")
+                typer.echo(f"  {title!r}: {db_id.replace('-', '')}")
         raise typer.Exit(1) from exc
 
 

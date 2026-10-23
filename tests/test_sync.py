@@ -119,6 +119,6 @@ def test_unknown_book_relation_is_nulled(conn, settings):
 
 
 def test_schema_mismatch_is_reported(conn, settings):
-    settings.prop_highlight_page = "Page"
-    with pytest.raises(NotionError, match="missing property 'Page'"):
+    settings.prop_highlight_page = "page"
+    with pytest.raises(NotionError, match="missing property 'page'"):
         sync_all(conn, FakeNotion([], []), settings)

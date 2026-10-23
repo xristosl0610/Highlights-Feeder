@@ -17,11 +17,11 @@ class Settings(BaseSettings):
     library_database_id: str
 
     # Property names in the "Highlights" database (case-sensitive, must match Notion exactly)
-    prop_highlight_name: str = "name"
-    prop_highlight_keywords: str = "keywords"
-    prop_highlight_favorite: str = "favorite"
-    prop_highlight_page: str = "page"
-    prop_highlight_source: str = "source"
+    prop_highlight_name: str = "Name"
+    prop_highlight_keywords: str = "Keywords"
+    prop_highlight_favorite: str = "Favorite"
+    prop_highlight_page: str = "Page"
+    prop_highlight_source: str = "Source"
     # Property names in the "Library" database
     prop_book_name: str = "Name"
 
