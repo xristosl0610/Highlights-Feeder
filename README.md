@@ -3,10 +3,17 @@
 Syncs book highlights from a Notion database into SQLite and emails a daily digest
 (a free, self-hosted Readwise-style review). Runs for free on GitHub Actions.
 
-```
-Notion (Highlights + Library) --API--> SQLite cache --pick--> HTML email (Gmail SMTP)
-                                            |
-                         review history -> data/state.enc (encrypted, committed daily)
+```mermaid
+flowchart LR
+  A[Notion] -->|every run| B[Sync]
+  B -->|new page| C[insert]
+  B -->|edited page| D[update]
+  B -->|gone from Notion| E[mark deleted]
+  F[data/state.enc<br/>sent history] --> G[(SQLite)]
+  C & D & E --> G --> H[Pick highlights]
+  H --> I[HTML email]
+  H --> J[Record delivery history]
+  J --> F
 ```
 
 - **Notion is read-only** and the source of truth for highlights.
