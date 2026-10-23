@@ -11,28 +11,42 @@ Notion (Highlights + Library) --API--> SQLite cache --pick--> HTML email (Gmail 
 
 - **Notion is read-only** and the source of truth for highlights.
 - **SQLite** (`data/highlights.db`, gitignored) is a cache rebuilt from Notion on each run.
-  Page bodies (full highlight + comments) are fetched lazily, only for picked highlights.
+  Every run first syncs: new pages are inserted, edited pages (by `last_edited_time`) updated,
+  removed pages marked deleted. Page bodies (full highlight + comments) are fetched lazily,
+  only for picked highlights.
 - **Review history** (which highlights were sent when) is the only state that can't be
-  rebuilt, so it is encrypted with `STATE_KEY` and committed as `data/state.enc`. This keeps
-  the repo safe to be public, and the daily commit keeps the scheduled workflow alive.
-- **Selection**: weighted random. Favorites get `FAVORITE_WEIGHT`x the chance, each previous
-  showing lowers the chance, nothing repeats within `COOLDOWN_DAYS`, max `MAX_PER_BOOK`
-  per digest.
+  rebuilt, so it is encrypted with `STATE_KEY` and committed as `data/state.enc`. It is keyed
+  by Notion page ID, so new highlights simply start with 0 showings next to existing ones.
+  This keeps the repo safe to be public, and the daily commit keeps the scheduled workflow alive.
+- **Eligibility**: with `require_keywords = true`, only highlights with at least one keyword
+  (i.e. ones you've processed) are sent. Adding a keyword in Notion makes it eligible next run.
+- **Selection**: weighted random. Favorites get `favorite_weight`x the chance, each previous
+  showing lowers the chance (new highlights are favoured), nothing repeats within
+  `cooldown_days`, max `max_per_book` per digest.
+
+## Configuration
+
+| Where | What | Committed |
+|---|---|---|
+| [`feeder.toml`](feeder.toml) | Non-secret settings: digest size, schedule, property names... | Yes: edit, commit, push to change the daily run |
+| `.env` (local) / repo **Secrets** (Actions) | Tokens, IDs, passwords, `STATE_KEY` | Never |
+
+Precedence: environment variables > `.env` > `feeder.toml` > code defaults.
 
 ## Notion databases
 
 **Highlights** (`HIGHLIGHTS_DATABASE_ID`)
 
-| Property   | Type         | Env override              | Use                       |
+| Property   | Type         | `feeder.toml` key         | Use                       |
 |------------|--------------|---------------------------|---------------------------|
-| `Name`     | Title        | `PROP_HIGHLIGHT_NAME`     | Condensed highlight       |
-| `Keywords` | Multi-select | `PROP_HIGHLIGHT_KEYWORDS` | Tags shown in the email   |
-| `Favorite` | Checkbox     | `PROP_HIGHLIGHT_FAVORITE` | Boosts selection weight   |
-| `Page`     | Number       | `PROP_HIGHLIGHT_PAGE`     | Page in the book          |
-| `Source`   | Relation     | `PROP_HIGHLIGHT_SOURCE`   | Book in Library           |
+| `Name`     | Title        | `prop_highlight_name`     | Condensed highlight       |
+| `Keywords` | Multi-select | `prop_highlight_keywords` | Tags; required to be sent |
+| `Favorite` | Checkbox     | `prop_highlight_favorite` | Boosts selection weight   |
+| `Page`     | Number       | `prop_highlight_page`     | Page in the book          |
+| `Source`   | Relation     | `prop_highlight_source`   | Book in Library           |
 | page body  | blocks       | -                         | Full highlight + comments |
 
-**Library** (`LIBRARY_DATABASE_ID`): `Name` (Title, `PROP_BOOK_NAME`).
+**Library** (`LIBRARY_DATABASE_ID`): `Name` (Title, `prop_book_name`).
 
 Property names are case-sensitive. Run `uv run feeder check` to validate them.
 
@@ -79,8 +93,7 @@ uv run feeder stats
 2. **Settings -> Secrets and variables -> Actions -> Secrets**: add `NOTION_TOKEN`,
    `HIGHLIGHTS_DATABASE_ID`, `LIBRARY_DATABASE_ID`, `STATE_KEY`, `SMTP_USER`,
    `SMTP_PASSWORD`, `EMAIL_TO`.
-3. Optional **Variables** to override defaults: `DIGEST_SIZE`, `FAVORITE_WEIGHT`,
-   `COOLDOWN_DAYS`, `MAX_PER_BOOK`, `TIMEZONE`, `SEND_TIME`, `PROP_*`.
+3. Non-secret settings come from the committed `feeder.toml`; no Variables needed.
 4. **Actions -> Daily highlights -> Run workflow** (tick *force*) to test.
 
 The workflow runs at 05:30 and 06:30 UTC; the app sends only once per local day after
@@ -100,7 +113,7 @@ uv run ruff format .
 
 | Module         | Responsibility                                      |
 |----------------|-----------------------------------------------------|
-| `config.py`    | Settings from env / `.env`                          |
+| `config.py`    | Settings from env / `.env` / `feeder.toml`          |
 | `notion.py`    | Read-only Notion API client (version `2025-09-03`)  |
 | `db.py`        | SQLite schema                                       |
 | `sync.py`      | Notion -> SQLite, lazy page bodies                  |

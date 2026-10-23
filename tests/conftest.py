@@ -5,7 +5,8 @@ from highlights_feeder.config import Settings
 
 
 @pytest.fixture
-def settings(tmp_path) -> Settings:
+def settings(tmp_path, monkeypatch) -> Settings:
+    monkeypatch.chdir(tmp_path)  # don't pick up the repo's feeder.toml / .env
     return Settings(
         _env_file=None,
         notion_token="secret",

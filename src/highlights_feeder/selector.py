@@ -36,11 +36,13 @@ SELECT h.id, h.name, h.body, h.favorite, h.page, h.book_id, h.url, b.name AS boo
   LEFT JOIN deliveries d ON d.highlight_id = h.id
   LEFT JOIN digests g ON g.id = d.digest_id
  WHERE h.deleted = 0
+   AND (:require_keywords = 0
+        OR EXISTS (SELECT 1 FROM highlight_keywords hk WHERE hk.highlight_id = h.id))
  GROUP BY h.id
 """
 
 
-def load_candidates(conn: sqlite3.Connection) -> list[Highlight]:
+def load_candidates(conn: sqlite3.Connection, require_keywords: bool = False) -> list[Highlight]:
     return [
         Highlight(
             id=row["id"],
@@ -55,7 +57,7 @@ def load_candidates(conn: sqlite3.Connection) -> list[Highlight]:
             times_shown=row["times_shown"],
             last_shown=datetime.fromisoformat(row["last_shown"]) if row["last_shown"] else None,
         )
-        for row in conn.execute(CANDIDATES_SQL)
+        for row in conn.execute(CANDIDATES_SQL, {"require_keywords": int(require_keywords)})
     ]
 
 

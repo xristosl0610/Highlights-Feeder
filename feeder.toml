@@ -1,0 +1,24 @@
+# Non-secret settings, committed to git: edit, commit and push to change the GitHub Actions run.
+# Secrets live in .env locally and in GitHub repository secrets.
+# Precedence: environment variables > .env > this file > code defaults.
+
+# --- Digest ---
+digest_size = 3          # highlights per email
+require_keywords = true  # only send highlights that have at least one keyword (i.e. processed)
+favorite_weight = 3.0    # favorites are this many times more likely to be picked
+cooldown_days = 60       # don't repeat a highlight within this many days
+max_per_book = 2         # max highlights from the same book per digest
+timezone = "Europe/Amsterdam"
+send_time = "07:30"
+
+# --- Notion property names (case-sensitive, must match Notion exactly) ---
+prop_highlight_name = "Name"          # title: condensed highlight
+prop_highlight_keywords = "Keywords"  # multi-select
+prop_highlight_favorite = "Favorite"  # checkbox
+prop_highlight_page = "Page"          # number
+prop_highlight_source = "Source"      # relation -> Library
+prop_book_name = "Name"               # title in Library
+
+# --- Email server ---
+smtp_host = "smtp.gmail.com"
+smtp_port = 465

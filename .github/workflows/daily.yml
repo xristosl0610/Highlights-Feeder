@@ -41,19 +41,6 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          # Optional non-secret overrides (Settings > Secrets and variables > Actions > Variables)
-          DIGEST_SIZE: ${{ vars.DIGEST_SIZE }}
-          FAVORITE_WEIGHT: ${{ vars.FAVORITE_WEIGHT }}
-          COOLDOWN_DAYS: ${{ vars.COOLDOWN_DAYS }}
-          MAX_PER_BOOK: ${{ vars.MAX_PER_BOOK }}
-          TIMEZONE: ${{ vars.TIMEZONE }}
-          SEND_TIME: ${{ vars.SEND_TIME }}
-          PROP_HIGHLIGHT_NAME: ${{ vars.PROP_HIGHLIGHT_NAME }}
-          PROP_HIGHLIGHT_KEYWORDS: ${{ vars.PROP_HIGHLIGHT_KEYWORDS }}
-          PROP_HIGHLIGHT_FAVORITE: ${{ vars.PROP_HIGHLIGHT_FAVORITE }}
-          PROP_HIGHLIGHT_PAGE: ${{ vars.PROP_HIGHLIGHT_PAGE }}
-          PROP_HIGHLIGHT_SOURCE: ${{ vars.PROP_HIGHLIGHT_SOURCE }}
-          PROP_BOOK_NAME: ${{ vars.PROP_BOOK_NAME }}
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
           if [ -z "$STATE_KEY" ]; then echo "STATE_KEY secret is required"; exit 1; fi

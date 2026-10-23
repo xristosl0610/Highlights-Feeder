@@ -93,7 +93,7 @@ def sync(
 def _build_digest(conn: sqlite3.Connection, s: Settings, now: datetime) -> list[selector.Highlight]:
     with _client(s) as client:
         sync_all(conn, client, s)
-        picked = selector.pick(selector.load_candidates(conn), s, now)
+        picked = selector.pick(selector.load_candidates(conn, s.require_keywords), s, now)
         fetch_bodies(conn, client, [h.id for h in picked])
     selector.refresh_bodies(conn, picked)
     return picked
@@ -157,6 +157,8 @@ def stats() -> None:
         "Books": "SELECT COUNT(*) FROM books",
         "Highlights": "SELECT COUNT(*) FROM highlights WHERE deleted = 0",
         "Favorites": "SELECT COUNT(*) FROM highlights WHERE deleted = 0 AND favorite = 1",
+        "With keywords": """SELECT COUNT(*) FROM highlights h WHERE deleted = 0 AND EXISTS
+            (SELECT 1 FROM highlight_keywords hk WHERE hk.highlight_id = h.id)""",
         "Digests sent": "SELECT COUNT(*) FROM digests",
         "Distinct shown": "SELECT COUNT(DISTINCT highlight_id) FROM deliveries",
     }
