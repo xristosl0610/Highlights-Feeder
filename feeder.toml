@@ -9,7 +9,7 @@ favorite_weight = 3.0    # favorites are this many times more likely to be picke
 cooldown_days = 60       # don't repeat a highlight within this many days
 max_per_book = 2         # max highlights from the same book per digest
 timezone = "Europe/Amsterdam"
-send_time = "07:30"
+send_time = "06:00"
 
 # --- Notion property names (case-sensitive, must match Notion exactly) ---
 prop_highlight_name = "Name"          # title: condensed highlight

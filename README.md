@@ -103,9 +103,58 @@ uv run feeder stats
 3. Non-secret settings come from the committed `feeder.toml`; no Variables needed.
 4. **Actions -> Daily highlights -> Run workflow** (tick *force*) to test.
 
-The workflow runs at 05:30 and 06:30 UTC; the app sends only once per local day after
-`SEND_TIME`, so delivery stays at 07:30 Europe/Amsterdam across DST changes. GitHub may delay
-scheduled runs by a few minutes.
+GitHub's scheduled events are a best-effort fallback: they can arrive hours late or be
+dropped. The two UTC schedules cover daylight saving time; the app sends only once per
+local day after `SEND_TIME`. For a more punctual trigger while your PC is off, set up
+an external scheduler below.
+
+### 5. More punctual off-PC delivery (free)
+
+[cron-job.org](https://cron-job.org/en/) can send an HTTP request at 06:05
+Europe/Amsterdam to start this same GitHub workflow. It needs only permission to trigger
+Actions, not your Notion or email secrets. GitHub's own schedule remains a late fallback;
+the encrypted sent history and daily date check prevent a second email once the first
+run has finished. Neither provider guarantees exact delivery to the minute. Set the job's
+time in your cron-job.org account as well; changing this file does not update that account.
+
+1. From your **personal** GitHub account, create a [fine-grained token](https://github.com/settings/personal-access-tokens/new)
+  restricted to **Only select repositories** -> `Highlights-Feeder`, with repository
+  permission **Actions: Read and write** and no other write permissions. Choose an
+  expiration you can renew, and keep the token private.
+2. Create a free cron-job.org account and a job. Fill in its form as follows:
+
+  | Field | Value |
+  |---|---|
+  | Title | `Daily highlights` |
+  | URL | `https://api.github.com/repos/xristosl0610/Highlights-Feeder/actions/workflows/daily.yml/dispatches` |
+  | Schedule | Every day at **06:05** (five minutes after the app's 06:00 gate) |
+  | Time zone | `Europe/Amsterdam` (automatically follows CET/CEST) |
+  | Request method | `POST` |
+  | Request body | `{"ref":"main","inputs":{"force":false}}` (raw JSON, not form fields) |
+  | Timeout | **30 seconds** (GitHub should accept the dispatch much sooner) |
+  | Treat HTTP 3xx redirects as success | **Off**; the GitHub API should return a 2xx status |
+
+3. Under **Headers**, use **Add** for each separate name/value pair:
+
+  | Header name | Header value |
+  |---|---|
+  | `Authorization` | `Bearer YOUR_FINE_GRAINED_TOKEN` (replace the placeholder; keep the space after `Bearer`) |
+  | `Accept` | `application/vnd.github+json` |
+  | `Content-Type` | `application/json` |
+
+  Enter the token **only** in the scheduler's private header settings, never in the URL,
+  README, workflow file, issue, or a public log. Enable failure notifications.
+4. Check the scheduler's upcoming execution preview spans the March/October DST change.
+  If its timezone is UTC-only, make two daily jobs at **04:05 UTC** and **05:05 UTC**
+  with the same request. The app skips the early winter run and the later summer run.
+5. Use the scheduler's test request once, with `force: false`. GitHub should return
+  HTTP 200 (or 204 on older API versions); then check **Actions -> Daily highlights**
+  for a `workflow_dispatch` run and its result. A 2xx response means GitHub accepted
+  the request, **not** that the email was sent. If today's digest is already recorded,
+  the run should skip it; otherwise a test after 06:00 may send today's real email.
+
+If an email is missing, inspect the Actions run (or trigger **Run workflow** manually
+with **force unchecked**). Rotate the token when it expires or if it is exposed.
 
 > Public repo: workflow logs are public. The app only logs counts, never highlight content.
 > Don't add debug prints of highlights to the `send` path.
