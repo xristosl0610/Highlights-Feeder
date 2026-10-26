@@ -84,19 +84,39 @@ Property names are case-sensitive. Run `uv run feeder check` to validate them.
 
 Requires [uv](https://docs.astral.sh/uv/).
 
+**First-time setup** (not needed for every preview):
+
 ```powershell
-uv sync
-Copy-Item .env.example .env   # then fill it in
-uv run feeder keygen          # paste output into STATE_KEY (keep it safe!)
-uv run feeder check           # verify Notion access + property names
-uv run feeder sync            # pull everything into data/highlights.db
-uv run feeder preview         # writes digest_preview.html, sends nothing
-uv run feeder send --force    # send a real email now
-uv run feeder stats
+uv sync                       # install dependencies; uv run also syncs if needed
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }  # then fill in credentials
+uv run feeder keygen           # only for a new history: save in .env and GitHub's STATE_KEY secret
+uv run feeder check            # once, or after changing Notion access/property names
 ```
 
-`uv run feeder sync --bodies` also downloads every page body (first time ~10 min for
-~1,500 highlights due to Notion's 3 req/s rate limit) if you want a complete local database.
+If the repo already has `data/state.enc`, keep the same `STATE_KEY` in `.env` so the
+preview can read the existing review history. Do not generate a replacement key.
+
+**Every time you want a local HTML preview:**
+
+```powershell
+uv run feeder preview
+```
+
+This syncs new and edited Notion entries, picks highlights, fetches their page bodies,
+and writes `digest_preview.html`. Open that file in a browser. It does **not** send an
+email or record a delivery; it does not show the email's sender or subject headers.
+You do not need to run `sync` separately first.
+
+Optional commands: `uv run feeder sync` updates just the local SQLite cache without
+building a digest; `uv run feeder stats` shows counts. `uv run feeder sync --bodies`
+also downloads every page body (first time ~10 min for ~1,500 highlights due to
+Notion's 3 req/s rate limit) if you want a complete local database.
+
+To test **actual email delivery and headers**, run **Actions -> Daily highlights -> Run
+workflow** in GitHub. With *force* unchecked it skips if today's digest was already
+sent; with *force* checked it sends an extra email today. Avoid local `feeder send
+--force` for routine tests: it changes your local encrypted review history, which
+can diverge from the history GitHub Actions commits daily.
 
 ### 4. GitHub Actions (free)
 
