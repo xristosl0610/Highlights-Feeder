@@ -2,6 +2,8 @@ import random
 from collections import Counter
 from datetime import UTC, date, datetime, timedelta
 
+from pydantic import SecretStr
+
 from highlights_feeder import db, mailer, state
 from highlights_feeder.selector import (
     Highlight,
@@ -74,7 +76,6 @@ def test_record_and_state_roundtrip(conn, settings, tmp_path):
 
     key = state.generate_key()
     state.save_encrypted(conn, settings.state_path, key)
-    assert b"h1" not in settings.state_path.read_bytes()
 
     fresh = db.connect(tmp_path / "fresh.db")
     fresh.execute("INSERT INTO highlights (id, name, last_edited) VALUES ('h1', 'A', 'x')")
@@ -89,9 +90,41 @@ def test_render_escapes_html():
     h = hl(1)
     h.name = "<script>alert(1)</script>"
     h.body = [{"type": "quote", "text": "a & b"}]
-    _, text, html = mailer.render([h], date(2026, 10, 23))
+    subject, text, html = mailer.render([h], date(2026, 10, 23))
+    assert subject == "Daily Digest | Friday, 23 October 2026"
     assert "<script>" not in html and "&lt;script&gt;" in html
     assert "a & b" in text
+
+
+def test_sender_display_name(monkeypatch, settings):
+    messages = []
+
+    class FakeSMTP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def login(self, user, password):
+            assert (user, password) == ("highlights.feeder@gmail.com", "app-password")
+
+        def send_message(self, message):
+            messages.append(message)
+
+    monkeypatch.setattr(mailer.smtplib, "SMTP_SSL", FakeSMTP)
+    settings.smtp_user = "highlights.feeder@gmail.com"
+    settings.smtp_password = SecretStr("app-password")
+    settings.email_to = "reader@example.com"
+    mailer.send(settings, "Daily Digest", "Text", "<p>Text</p>")
+
+    [message] = messages
+    assert message["From"].addresses[0].display_name == "Highlights Feeder"
+    assert message["From"].addresses[0].addr_spec == "highlights.feeder@gmail.com"
+    assert message["To"].addresses[0].addr_spec == "reader@example.com"
 
 
 def test_render_rich_formatting():

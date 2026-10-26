@@ -22,3 +22,5 @@ prop_book_name = "Name"               # title in Library
 # --- Email server ---
 smtp_host = "smtp.gmail.com"
 smtp_port = 465
+sender_name = "Highlights Feeder"
+subject_prefix = "Daily Digest"

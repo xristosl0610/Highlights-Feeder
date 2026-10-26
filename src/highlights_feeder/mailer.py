@@ -1,6 +1,7 @@
 import smtplib
 import ssl
 from datetime import date
+from email.headerregistry import Address
 from email.message import EmailMessage
 
 from jinja2 import Environment, PackageLoader
@@ -81,9 +82,11 @@ _env.filters["rich"] = rich_html
 _env.filters["color_css"] = color_css
 
 
-def render(highlights: list[Highlight], day: date) -> tuple[str, str, str]:
+def render(
+    highlights: list[Highlight], day: date, subject_prefix: str = "Daily Digest"
+) -> tuple[str, str, str]:
     """Return (subject, plain text, html)."""
-    subject = f"Your daily highlights - {day:%a %d %b %Y}"
+    subject = f"{subject_prefix} | {day:%A, %d %B %Y}"
     ctx = {"highlights": highlights, "day": day, "subject": subject}
     text = _env.get_template("digest.txt.j2").render(ctx)
     html = _env.get_template("digest.html.j2").render(ctx)
@@ -98,7 +101,7 @@ def send(s: Settings, subject: str, text: str, html: str) -> None:
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = s.email_from or s.smtp_user
+    msg["From"] = Address(display_name=s.sender_name, addr_spec=s.email_from or s.smtp_user)
     msg["To"] = s.email_to
     msg.set_content(text)
     msg.add_alternative(html, subtype="html")

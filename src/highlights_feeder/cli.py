@@ -110,7 +110,9 @@ def preview(
     conn = _open_db(s)
     now = datetime.now(UTC)
     picked = _build_digest(conn, s, now)
-    _, _, html = mailer.render(picked, now.astimezone(ZoneInfo(s.timezone)).date())
+    _, _, html = mailer.render(
+        picked, now.astimezone(ZoneInfo(s.timezone)).date(), s.subject_prefix
+    )
     out.write_text(html, encoding="utf-8")
     typer.echo(f"Preview with {len(picked)} highlights written to {out}")
 
@@ -140,7 +142,7 @@ def send(
         typer.secho("No highlights available to send.", fg="red")
         raise typer.Exit(1)
 
-    mailer.send(s, *mailer.render(picked, local.date()))
+    mailer.send(s, *mailer.render(picked, local.date(), s.subject_prefix))
     selector.record_digest(conn, picked, now, local.date())
     if s.state_key:
         state.save_encrypted(conn, s.state_path, s.state_key.get_secret_value())

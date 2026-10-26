@@ -39,6 +39,10 @@ flowchart LR
 | `.env` (local) / repo **Secrets** (Actions) | Tokens, IDs, passwords, `STATE_KEY` | Never |
 
 Precedence: environment variables > `.env` > `feeder.toml` > code defaults.
+Change `sender_name` and `subject_prefix` in `feeder.toml` to customize the email header.
+For example, the defaults produce `Highlights Feeder <your-sender@gmail.com>` and
+`Daily Digest | Monday, 26 October 2026`. The actual sender address comes from
+`SMTP_USER` (or an `EMAIL_FROM` override); Gmail may display a saved contact name instead.
 
 ## Notion databases
 

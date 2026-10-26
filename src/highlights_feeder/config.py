@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     smtp_password: SecretStr | None = None
     email_from: str | None = None
     email_to: str | None = None
+    sender_name: str = "Highlights Feeder"
+    subject_prefix: str = "Daily Digest"
 
 
 @lru_cache
