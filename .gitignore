@@ -16,7 +16,6 @@ data/*
 digest_preview.html
 .pytest_cache/
 .ruff_cache/
-plan_instructions.md
 
 # Stray folder created by a tool with an unexpanded env var
 %LOCALAPPDATA%/
